@@ -24,4 +24,4 @@ run.py
 templates.py
 ranklamma.py
 ranklamma_pyterrier.py
-
+*.gitignore
