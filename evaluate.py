@@ -1,23 +1,19 @@
 import argparse
-
 import pyterrier as pt
 pt.init()
 from pyterrier.measures import *
 from pyterrier_adaptive import  CorpusGraph
-from slide_gar import SlideGAR
-from gar_rm3 import RM3GAR
-
 from pyterrier_pisa import PisaIndex
 
 
 from rerankers import Reranker
+from pyterrier_rerank import RerankerPyterrierTransformer
 
-import torch
+from slide_gar import SlideGAR
+
+
 import transformers
-import numpy as np
-import pandas as pd
 from dotenv import load_dotenv
-import json
 import os
 
 
@@ -37,60 +33,31 @@ parser.add_argument("--buffer", type=int, default=20, help="buffer size")
 
 args = parser.parse_args()
 
-torch.manual_seed(args.seed)
-torch.cuda.manual_seed(args.seed)
-np.random.seed(args.seed)
 transformers.logging.set_verbosity_error()
 load_dotenv()
 
 dataset = pt.get_dataset('irds:msmarco-passage')
-
-
 retriever = PisaIndex.from_dataset('msmarco_passage').bm25()
     
-openai_API_KEY = os.getenv('YOUR_APIKEY')
-base_url = os.getenv('YOUR_API_BASE')
+API_KEY = os.getenv('YOUR_APIKEY')
 
-ranker  = Reranker(model_name=args.model_name, model_type=args.model_type, api_key=openai_API_KEY, verbose=0)
-scorer =  pt.text.get_text(dataset, 'text') >> ranker.as_pyterrier_transformer()
+ranker  = Reranker(model_name=args.model_name, model_type=args.model_type, api_key=API_KEY, verbose=0)
+scorer =  pt.text.get_text(dataset, 'text') >> RerankerPyterrierTransformer(ranker)
 
 
 
 """
 We use the corpus graph released by the author of GAR for our experiments. 
 """
-
-graph = CorpusGraph.from_hf('macavaney/msmarco-passage.corpusgraph.bm25.128').to_limit_k(args.lk)   
-
-
-pd.set_option('display.max_columns', None) 
-pd.set_option('display.width', None)  # Display full width of the terminal
-
-########################### Listwise GAR ###########################
+graph = CorpusGraph.from_dataset('msmarco_passage', 'corpusgraph_bm25_k16')
 
 
-#save_dir=f"pyterrier_runs/{args.graph_name}_{args.model_name}_dl{args.dl_type}_ret_{args.retriever}_lk_{args.lk}"
-#save_dir=f"pyterrier_runs/{args.graph_name}_{args.model_name}_dl{args.dl_type}_ret_{args.retriever}_lk_{args.lk}_topb/"
-
-if args.budget==50:
-    #ave_dir=f"pyterrier_runs/dl{args.dl_type}/{args.graph_name}/{args.retriever}>>{args.model_name}_lk_{args.lk}_topb/"
-    save_dir=f"pyterrier_runs/{args.graph_name}_{args.model_name}_dl{args.dl_type}_ret_{args.retriever}_lk_{args.lk}/"
-else:
-    save_dir=f"pyterrier_runs/dl{args.dl_type}/{args.graph_name}/{args.retriever}>>{args.model_name}_lk_{args.lk}_c_{args.budget}_topb/"
-
-
-# if not os.path.exists(save_dir):
-#     print("not found, folder created")
-#     print(save_dir)
-#     exit()
-#     os.makedirs(save_dir)
+save_dir = f"saved_pyterrier_runs/dl{args.dl_type}/{args.graph_name}/{args.retriever}>>{args.model_name}_lk_{args.lk}_c_{args.budget}_topb/"
 
 
 dataset = pt.get_dataset(f'irds:msmarco-passage/trec-dl-20{args.dl_type}/judged')
-
 topics = dataset.get_topics()
 qrels = dataset.get_qrels()
-
 
 results = pt.Experiment(
     [retriever % args.budget >> scorer, 
@@ -99,14 +66,12 @@ results = pt.Experiment(
     ],
     topics,
     qrels,
-    [nDCG@10, R(rel=2)@b, Judged@10],
-    names=[f'{args.retriever}_{args.model_name}-full', 
+    [nDCG@10, R(rel=2)@args.budget],
+    names=[f'{args.retriever}_{args.model_name}', 
         f'{args.retriever}_GAR({args.model_name})'
         ],
-    #save_dir=save_dir,
-    #save_mode='reuse',
-    #baseline=0,
-    #correction='bonferroni', 
+    save_dir=save_dir,
+    save_mode='reuse',
 )
 print(results.T)
 
