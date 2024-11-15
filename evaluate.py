@@ -5,7 +5,7 @@ from pyterrier.measures import *
 from pyterrier_adaptive import  CorpusGraph
 from pyterrier_pisa import PisaIndex
 
-
+import torch
 from rerankers import Reranker
 from pyterrier_rerank import RerankerPyterrierTransformer
 
@@ -32,6 +32,8 @@ parser.add_argument("--buffer", type=int, default=20, help="buffer size")
 
 
 args = parser.parse_args()
+
+
 
 transformers.logging.set_verbosity_error()
 load_dotenv()
@@ -70,7 +72,8 @@ results = pt.Experiment(
     names=[f'{args.retriever}_{args.model_name}', 
         f'{args.retriever}_GAR({args.model_name})'
         ],
-    save_dir=save_dir,
+        # If you do not want to use the saved runs, please comment out the following lines.
+    save_dir=save_dir,  
     save_mode='reuse',
 )
 print(results.T)
