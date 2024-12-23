@@ -2,11 +2,14 @@ import argparse
 import pyterrier as pt
 pt.init()
 from pyterrier.measures import *
-from pyterrier_adaptive import  CorpusGraph
 from pyterrier_pisa import PisaIndex
+import pyterrier_alpha as pta
 
-import torch
 from rerankers import Reranker
+
+from rerankers import Reranker
+
+
 from pyterrier_rerank import RerankerPyterrierTransformer
 
 from slide_gar import SlideGAR
@@ -34,32 +37,27 @@ parser.add_argument("--buffer", type=int, default=20, help="buffer size")
 args = parser.parse_args()
 
 
-
 transformers.logging.set_verbosity_error()
 load_dotenv()
 
 dataset = pt.get_dataset('irds:msmarco-passage')
 retriever = PisaIndex.from_dataset('msmarco_passage').bm25()
     
-API_KEY = os.getenv('YOUR_APIKEY')
+API_KEY = os.getenv('YOUR_API_KEY')
 
-ranker  = Reranker(model_name=args.model_name, model_type=args.model_type, api_key=API_KEY, verbose=0)
+
+ranker  = Reranker(model_name = args.model_name, model_type=args.model_type, api_key=API_KEY, verbose=0)
 scorer =  pt.text.get_text(dataset, 'text') >> RerankerPyterrierTransformer(ranker)
 
 
-
-"""
-We use the corpus graph released by the author of GAR for our experiments. 
-"""
-graph = CorpusGraph.from_dataset('msmarco_passage', 'corpusgraph_bm25_k16')
-
-
-save_dir = f"saved_pyterrier_runs/dl{args.dl_type}/{args.graph_name}/{args.retriever}>>{args.model_name}_lk_{args.lk}_c_{args.budget}_topb/"
+graph = pta.Artifact.from_hf('macavaney/msmarco-passage.corpusgraph.bm25.128').to_limit_k(args.lk)
 
 
 dataset = pt.get_dataset(f'irds:msmarco-passage/trec-dl-20{args.dl_type}/judged')
 topics = dataset.get_topics()
 qrels = dataset.get_qrels()
+
+
 
 results = pt.Experiment(
     [retriever % args.budget >> scorer, 
@@ -70,12 +68,8 @@ results = pt.Experiment(
     qrels,
     [nDCG@10, R(rel=2)@args.budget],
     names=[f'{args.retriever}_{args.model_name}', 
-        f'{args.retriever}_GAR({args.model_name})'
-        ],
-        # If you do not want to use the saved runs, please comment out the following lines.
-    save_dir=save_dir,  
-    save_mode='reuse',
-)
+        f'{args.retriever}_SlideGAR({args.model_name})'
+        ])
 print(results.T)
 
 

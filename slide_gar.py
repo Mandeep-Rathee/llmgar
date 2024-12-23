@@ -75,9 +75,8 @@ class SlideGAR(pt.Transformer):
 
             r1_upto_now = {}
             selected_docs = []
-            top_10 = []
+            top_b = []
 
-            query_start_time = time.perf_counter()
             iteration = 0
             while len(scores) < self.num_results and any(r for r in res_map):
                 if len(res_map[iteration%len(res_map)]) == 0:
@@ -103,8 +102,9 @@ class SlideGAR(pt.Transformer):
 
                 buffer =  top_b + batch_docs
                 batch  = pd.DataFrame(buffer, columns=['docno'])
-                batch['qid'] = qid
+                batch['qid'] = [qid[0]] * len(batch)
                 batch['query'] = query
+
 
                 batch = self.scorer(batch)
                 ranked_buffer = batch.docno.tolist()
