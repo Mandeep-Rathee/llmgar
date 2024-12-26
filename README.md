@@ -1,5 +1,6 @@
 # Guiding Retrieval using LLM-based Listwise Rankers
 
+This is official repository for our paper (Guiding Retrieval using LLM-based Listwise Rankers) accepted in ECIR, 2025.  
 
 <p align="center">
   <img src="slidegar-v3.png" />
