@@ -7,9 +7,6 @@ import pyterrier_alpha as pta
 
 from rerankers import Reranker
 
-from rerankers import Reranker
-
-
 from pyterrier_rerank import RerankerPyterrierTransformer
 
 from slide_gar import SlideGAR
@@ -42,21 +39,16 @@ load_dotenv()
 
 dataset = pt.get_dataset('irds:msmarco-passage')
 retriever = PisaIndex.from_dataset('msmarco_passage').bm25()
-    
 API_KEY = os.getenv('YOUR_API_KEY')
-
 
 ranker  = Reranker(model_name = args.model_name, model_type=args.model_type, api_key=API_KEY, verbose=0)
 scorer =  pt.text.get_text(dataset, 'text') >> RerankerPyterrierTransformer(ranker)
 
-
 graph = pta.Artifact.from_hf('macavaney/msmarco-passage.corpusgraph.bm25.128').to_limit_k(args.lk)
-
 
 dataset = pt.get_dataset(f'irds:msmarco-passage/trec-dl-20{args.dl_type}/judged')
 topics = dataset.get_topics()
 qrels = dataset.get_qrels()
-
 
 
 results = pt.Experiment(
@@ -69,7 +61,8 @@ results = pt.Experiment(
     [nDCG@10, R(rel=2)@args.budget],
     names=[f'{args.retriever}_{args.model_name}', 
         f'{args.retriever}_SlideGAR({args.model_name})'
-        ])
+        ]
+        )
 print(results.T)
 
 
