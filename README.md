@@ -24,8 +24,8 @@ pip install pyterrier_alpha
 We use the coprus graphs from the [GAR](https://arxiv.org/pdf/2208.08942) paper.
 For instance, the bm25 based corpus graph can be downloaded using:
 ```
-from pyterrier_adaptive import  CorpusGraph
-graph = CorpusGraph.from_dataset('msmarco_passage', 'corpusgraph_bm25_k16')
+import pyterrier_alpha as pta
+graph = pta.Artifact.from_hf('macavaney/msmarco-passage.corpusgraph.bm25.128').to_limit_k(16)
 ```
 
 ## Reproduction
