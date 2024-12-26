@@ -1,4 +1,4 @@
-# Guiding Retrieval using Large Language Models
+# Guiding Retrieval using LLM-based Listwise Rankers
 
 
 <p align="center">
@@ -15,8 +15,7 @@ We have added all dependencies in requirements.txt file which can be downloaded 
 pip install "rerankers[all]"
 pip install --upgrade git+https://github.com/terrierteam/pyterrier_adaptive.git
 pip install pyterrier_pisa==0.0.6
-pip install numpy==1.21.0
-pip install pandas==1.4.2
+pip install pyterrier_alpha
 ```
 
 ## Corpus Graph
@@ -37,3 +36,6 @@ Our results can be reproduced by using the `evaluate.py` file. Additionally, we 
 ```
 python3 evaluate.py --model_name zephyr --model_type rankllm --budget 50 --verbose --dl_type 19
 ```
+
+
+
