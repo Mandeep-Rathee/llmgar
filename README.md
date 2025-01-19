@@ -39,4 +39,14 @@ python3 evaluate.py --model_name zephyr --model_type rankllm --budget 50 --verbo
 ```
 
 
+## Citation
+
+```
+@article{rathee2025guiding,
+  title={Guiding Retrieval using LLM-based Listwise Rankers},
+  author={Rathee, Mandeep and MacAvaney, Sean and Anand, Avishek},
+  journal={arXiv preprint arXiv:2501.09186},
+  year={2025}
+}
+```
 
